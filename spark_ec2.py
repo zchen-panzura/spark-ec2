@@ -197,6 +197,8 @@ def parse_args():
     parser.add_option(
         "-i", "--identity-file",
         help="SSH private key file to use for logging into instances")
+    parser.add_option("--aws_access_key_id", default=None, help="aws access key id. Get from config if not provided")
+    parser.add_option("--aws_secret_access_key", default=None, help="aws secret access key. Get from config if not provided")
     parser.add_option(
         "-p", "--profile", default=None,
         help="If you have multiple profiles (AWS or boto config), you can configure " +
@@ -1381,7 +1383,10 @@ def real_main():
 
     try:
         if opts.profile is None:
-            conn = ec2.connect_to_region(opts.region)
+            if not (opts.aws_access_key_id) and not (opts.aws_secret_access_key):
+                conn = ec2.connect_to_region(opts.region, aws_access_key_id=opts.aws_access_key_id, aws_secret_access_key=opts.aws_secret_access_key)
+            else:
+                conn = ec2.connect_to_region(opts.region)
         else:
             conn = ec2.connect_to_region(opts.region, profile_name=opts.profile)
     except Exception as e:
