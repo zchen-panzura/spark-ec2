@@ -52,12 +52,20 @@ fi
 echo "Setting executable permissions on scripts..."
 find . -regex "^.+.\(sh\|py\)" | xargs chmod a+x
 
+PRIVATE_IP=`wget -q -O - http://169.254.169.254/latest/meta-data/local-ipv4`
+
 echo "RSYNC'ing /root/spark-ec2 to other cluster nodes..."
 rsync_start_time="$(date +'%s')"
 for node in $SLAVES $OTHER_MASTERS; do
   echo $node
   rsync -e "ssh $SSH_OPTS" -az /root/spark-ec2 $node:/root &
   scp $SSH_OPTS ~/.ssh/id_rsa $node:.ssh &
+
+  echo update /etc/hosts on $node
+  echo ssh $SSH_OPTS $node "echo -e \"\n${PRIVATE_IP} ${HOSTNAME}\n\" >>     /etc/hosts"
+  ssh $SSH_OPTS $node "echo -e \"\n${PRIVATE_IP} ${HOSTNAME}\n\" >>     /etc/hosts"
+  echo done update /etc/hosts on $node
+
   sleep 0.1
 done
 wait
