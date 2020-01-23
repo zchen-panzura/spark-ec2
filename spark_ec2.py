@@ -21,6 +21,7 @@
 
 from __future__ import division, print_function, with_statement
 
+import traceback
 import codecs
 import hashlib
 import itertools
@@ -169,11 +170,14 @@ external_libs = [
 setup_external_libs(external_libs)
 
 import boto
+#boto.set_stream_logger('boto')
+
 from boto.ec2.blockdevicemapping import BlockDeviceMapping, BlockDeviceType, EBSBlockDeviceType
 from boto import ec2
 
 
 class UsageError(Exception):
+    #traceback.print_exc()
     pass
 
 
@@ -357,14 +361,21 @@ def parse_args():
         if not os.path.isfile('/etc/boto.cfg'):
             # If there is no boto config, check aws credentials
             if not os.path.isfile(home_dir + '/.aws/credentials'):
-                if os.getenv('AWS_ACCESS_KEY_ID') is None:
+                if os.getenv('AWS_ACCESS_KEY_ID') is None and not (opts.aws_access_key_id):
                     print("ERROR: The environment variable AWS_ACCESS_KEY_ID must be set",
                           file=stderr)
                     sys.exit(1)
-                if os.getenv('AWS_SECRET_ACCESS_KEY') is None:
+                if os.getenv('AWS_SECRET_ACCESS_KEY') is None and not (opts.aws_secret_access_key):
                     print("ERROR: The environment variable AWS_SECRET_ACCESS_KEY must be set",
                           file=stderr)
                     sys.exit(1)
+
+    #from boto.api import env
+    #if opts.aws_access_key_id:
+    #    env.aws_access_key_id = opts.aws_access_key_id
+    #if opts.aws_secret_access_key:
+    #    env.aws_secret_access_key = opts.aws_secret_access_key
+    
     return (opts, action, cluster_name)
 
 
@@ -1383,9 +1394,13 @@ def real_main():
 
     try:
         if opts.profile is None:
-            if not (opts.aws_access_key_id) and not (opts.aws_secret_access_key):
+            #print("opts.aws_access_key_id: " + str(opts.aws_access_key_id))
+            #print("opts.aws_secret_access_key: " + str(opts.aws_secret_access_key))
+            if opts.aws_access_key_id is not None and opts.aws_secret_access_key is not None:
+                #print("aws_access_key_id: " + opts.aws_access_key_id + ", aws_secret_access_key: " + opts.aws_secret_access_key)
                 conn = ec2.connect_to_region(opts.region, aws_access_key_id=opts.aws_access_key_id, aws_secret_access_key=opts.aws_secret_access_key)
             else:
+                print("no aws_access_key_id and aws_secret_access_key provided")
                 conn = ec2.connect_to_region(opts.region)
         else:
             conn = ec2.connect_to_region(opts.region, profile_name=opts.profile)
