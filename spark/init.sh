@@ -144,6 +144,6 @@ else
   mv `ls -d spark-* | grep -v ec2` spark
 fi
 
-cp ./spark-ec2/spark/elasticsearch-spark-20_2.11-7.5.0.jar ./spark/jars
+cp ./spark-ec2/spark/elasticsearch-spark-20_2.11-6.5.4.jar ./spark/jars
 
 popd > /dev/null
